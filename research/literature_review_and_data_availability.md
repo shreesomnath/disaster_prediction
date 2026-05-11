@@ -5,46 +5,54 @@
 To train a robust Spatio-Temporal AI model, the dynamic weather inputs and ground-truth disaster datasets must overlap chronologically. 
 
 ### 1.1 Ground Truth Datasets
-*   **Hail (MRMS MESH):** 
-    *   *Availability:* Operational data is solid from **October 2014 to Present** (historical reanalysis exists for 1998-2011).
-    *   *Resolution:* ~1km.
-*   **Heatstress (NWS HeatRisk):**
-    *   *Availability:* Historical reconstructions available from **2005 to Present**.
-    *   *Resolution:* ~2.5km.
-*   **Landslides (USGS National Landslide Inventory):**
-    *   *Availability:* Continuous, spanning decades up to **2024**. Data precision varies (some exact dates, some date ranges).
-*   **Flooding (USGS / NOAA NWM):**
-    *   *Availability:* Standard gage and model proxy data is robust over the last decade.
+*   **Hail (MRMS MESH):** Operational data starts in **late 2014**.
+*   **Heatstress (NWS HeatRisk):** Historical archive starts in **2005**.
+*   **Landslides (USGS):** Continuous, up to **2024**.
+*   **Flooding (USGS / NOAA NWM):** Robust over the last decade.
 
 ### 1.2 Input Features (Google DeepMind Weather Data)
-*   **WeatherBench 2 (ERA5 based):** Contains historical baseline inputs from **1959 to 2023**.
-*   **WeatherNext 2 / Gen (DeepMind):** Real-time operational data is from **2022 to Present** (historic forecasts from 2019/2020). 
+*   **WeatherBench 2 (ERA5 based):** **1959 to 2023**.
+*   **WeatherNext 2 / Gen:** Real-time from **2022 to Present**. 
 
 ### 1.3 Recommended Overlap Window
 **The optimal training/validation window is 2015 to 2023.**
-*   This window ensures full coverage from MRMS (post-2014), HeatRisk, Landslides, and ERA5/WeatherBench 2 data. 
-*   We can use 2015–2021 for training and 2022–2023 for validation/testing.
 
 ---
 
-## 2. SOTA Architectures: GNNs vs. Diffusion Models
+## 2. Expanded SOTA Architecture Analysis (2024-2026)
 
-Recent literature shows a massive paradigm shift in AI weather and extreme event modeling from pure Deterministic GNNs to Generative Diffusion Models.
+To determine the best architecture for disaster prediction (hail, floods, heat, landslides), we must evaluate the latest generative paradigms beyond standard GNNs and Diffusion.
 
-### 2.1 Deterministic GNNs (e.g., GraphCast)
-*   **How they work:** Process weather states on an icosahedral mesh using Graph Neural Networks, optimized via Mean Squared Error (MSE).
-*   **Pros:** Extremely fast, highly accurate for standard atmospheric variables (RMSE), and relatively easier to train.
-*   **Cons:** Because they optimize for average error, they tend to "blur" out extreme, rare events (like peak heatwaves or intense storm structures) at longer lead times.
+### 2.1 Generative Paradigms Comparison
 
-### 2.2 Diffusion Models (e.g., GenCast, SEEDS)
-*   **How they work:** Learn the probability distribution of weather states using a denoising framework (often utilizing a GNN or Transformer backbone).
-*   **Pros:** Currently the SOTA for predicting **extremes and generating ensembles**. They maintain physical realism (sharp gradients) and don't "average out" severe disasters.
-*   **Cons:** Slower inference time (iterative denoising) and requires more complex training setups.
+| Architecture | Core Mechanism | Pros for Disaster Prediction | Cons for Disaster Prediction | Notable Earth/Weather Models |
+| :--- | :--- | :--- | :--- | :--- |
+| **Standard Diffusion (SDM)** | Solves Stochastic Differential Equations (SDE) to reverse Gaussian noise iteratively. | **SOTA for Ensembles.** Excellent at probabilistic tail-risk (extreme events) and high-fidelity textures. | **Slow inference.** Errors can compound over long rollouts (autoregressive steps). | GenCast, SEEDS, NVIDIA CorrDiff |
+| **Flow Matching (FM)** | Solves Ordinary Differential Equations (ODE) learning deterministic paths between noise and data. | **Extremely Fast.** Requires far fewer steps than SDM. Maintains high-resolution spatial details (sharpness). | Mathematical trajectories can be harder to tune for highly chaotic local variables. | FlowCast-ODE, FLUX.1 |
+| **Masked Diffusion (MDM)** | Joint sequence modeling using Transformers; masks and unmasks tokens across space *and* time. | **SOTA for Long-Range Stability.** Mitigates error accumulation. Much faster than SDM for sequences. | Less established for high-frequency micro-scale extremes (like hail) compared to subseasonal trends. | OmniCast, SeasonCast |
+| **Autoregressive (AR)** | Predicts the next spatial token based on previous tokens (like a LLM for images/grids). | Excellent sequence-to-sequence reasoning and temporal consistency. | Computationally heavy for high-res 2D/3D grids without heavy latent compression. | NVIDIA Atlas (Latent AR + Diffusion) |
+| **GANs (Generative Adversarial)** | Two networks competing to generate realistic data. | **Instant Inference.** Real-time generation (sub-second). | Prone to "mode collapse" (failing to capture the full probability distribution of rare events). | StyleGAN derivations (older downscaling models) |
 
-### 2.3 Hybrid / Foundation Models (e.g., NeuralGCM)
-Combine differentiable physics solvers with ML to ensure predictions obey physical conservation laws (mass, momentum), which is crucial for hydrology (flooding).
+### 2.2 SOTA Earth System Models (ESMs) & Hybrid Architectures
 
-## 3. Recommendations for Model Development
-1.  **Architecture:** Given that disasters (hail, landslides, extreme heat) are rare "tail" events, a **Probabilistic Diffusion Model with a GNN Backbone (similar to GenCast)** is highly recommended over a deterministic GNN. It will capture the peak intensities much better.
-2.  **Dataset Sourcing:** For the 2015-2023 window, we should target the **WeatherBench 2 ERA5** cloud buckets (Zarr format) as our primary historical input feature set. 
-3.  **Resolution:** We should standardize everything to a **0.25° (~25km) or 2.5km super-resolution grid** depending on compute constraints, regridding the 1km MRMS and point-based landslide data to match the chosen grid.
+The most advanced models today are **Hybrids**, utilizing different architectures for different temporal and spatial scales.
+
+*   **NVIDIA Earth-2 Architecture:**
+    *   *Nowcasting (0-6h):* **StormScope** (Generative AI predicting radar/satellite).
+    *   *Medium Range (15 days):* **Atlas** (Autoregressive Latent Diffusion Transformer) to step through time while maintaining sharp fronts.
+    *   *Downscaling:* **CorrDiff** (Standard Diffusion) to add 2km stochastic textures (heavy rain, wind gusts) to coarse 25km grids.
+*   **Deep Learning Earth System Model (DLESyM):**
+    *   Focuses on extreme long-term climate stability (1000+ years without drift), crucial for slow-onset disasters (droughts/heatstress) but less relevant for flash events (hail).
+*   **ICON / Traditional GCMs:**
+    *   Moving towards 1km global resolution, but computationally too expensive for rapid ensemble disaster warning compared to AI emulators.
+
+---
+
+## 3. Architectural Recommendation for this Project
+
+Given our goal is predicting specific, localized disasters (Hail, Floods, Heatstress, Landslides) over CONUS at a 2.5km/4km resolution:
+
+**Recommended Path:** A **Hybrid Latent Diffusion / Flow Matching approach (similar to NVIDIA's Earth-2/CorrDiff philosophy)**.
+1.  **Backbone (Latent/Temporal):** Use a DeepMind WeatherBench2 baseline (or a lightweight Autoregressive Transformer/GNN) to process the coarse spatio-temporal weather state.
+2.  **Disaster Generation (Spatial Detail):** Use a **Flow Matching** or **Conditional Diffusion Model** at the final stage to predict the specific disaster probabilities. 
+    *   *Why?* Standard GNNs blur out the extremes. Flow Matching will give us the sharp, high-fidelity local intensity required for Hail and Floods, but with much faster inference times than Standard Diffusion.
