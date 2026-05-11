@@ -56,3 +56,25 @@ Given our goal is predicting specific, localized disasters (Hail, Floods, Heatst
 1.  **Backbone (Latent/Temporal):** Use a DeepMind WeatherBench2 baseline (or a lightweight Autoregressive Transformer/GNN) to process the coarse spatio-temporal weather state.
 2.  **Disaster Generation (Spatial Detail):** Use a **Flow Matching** or **Conditional Diffusion Model** at the final stage to predict the specific disaster probabilities. 
     *   *Why?* Standard GNNs blur out the extremes. Flow Matching will give us the sharp, high-fidelity local intensity required for Hail and Floods, but with much faster inference times than Standard Diffusion.
+
+---
+
+## 4. Scientific References & Foundational Papers
+
+The architectural strategies outlined above are grounded in recent, peer-reviewed AI meteorology research:
+
+1.  **GenCast (Standard Diffusion for Ensembles):**
+    *   *Paper:* "GenCast: Diffusion-based ensemble forecasting for medium-range weather" (Nature, 2024).
+    *   *Authors:* Price, I., Sanchez-Gonzalez, A., et al. (Google DeepMind).
+    *   *Relevance:* Establishes conditional diffusion as the SOTA for probabilistic extreme event forecasting, outperforming traditional ECMWF ensembles. [arXiv:2312.15796](https://arxiv.org/abs/2312.15796)
+2.  **CorrDiff (Diffusion Downscaling / Hybrid Approach):**
+    *   *Paper:* "Residual Corrective Diffusion Modeling for Km-scale Atmospheric Downscaling" (Communications Earth & Environment, 2025).
+    *   *Authors:* Mardani, M., Brenowitz, N., et al. (NVIDIA).
+    *   *Relevance:* Validates the two-step architecture (Deterministic Mean + Stochastic Residual Diffusion) used in NVIDIA Earth-2 to generate 2km high-fidelity extremes (typhoons) from 25km inputs. [arXiv:2309.15214](https://arxiv.org/abs/2309.15214)
+3.  **Flow Matching for Continuous/Fast Forecasting:**
+    *   *Paper:* "FlowCast-ODE: Continuous Hourly Weather Forecasting with Dynamic Flow Matching and ODE Solver" (2025).
+    *   *Relevance:* Demonstrates that deterministic Flow Matching (solving ODEs) can achieve diffusion-level sharpness for short-range local extremes (nowcasting) with significantly faster inference times. [arXiv:2509.14775](https://arxiv.org/abs/2509.14775)
+4.  **OmniCast (Masked Diffusion for Long-Range Stability):**
+    *   *Paper:* "OmniCast: A Masked Latent Diffusion Model for Weather Forecasting Across Time Scales" (NeurIPS 2025).
+    *   *Authors:* Nguyen, T., Gupta, J.K., et al.
+    *   *Relevance:* Shows how Masked Diffusion Transformers eliminate the error accumulation seen in autoregressive rollouts, proving vital for long-range (subseasonal) prediction stability. [arXiv:2510.18707](https://arxiv.org/abs/2510.18707)
