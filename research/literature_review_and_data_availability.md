@@ -14,8 +14,13 @@ To train a robust Spatio-Temporal AI model, the dynamic weather inputs and groun
 *   **WeatherBench 2 (ERA5 based):** **1959 to 2023**.
 *   **WeatherNext 2 / Gen:** Real-time from **2022 to Present**. 
 
-### 1.3 Recommended Overlap Window
-**The optimal training/validation window is 2015 to 2023.**
+### 1.3 Recommended Overlap Window (Revised)
+
+**The optimal, computationally feasible training/validation window is January 1, 2022 to December 31, 2023.**
+
+*   *Why?* Google DeepMind's **WeatherNext 2.0** dataset (the recommended operational standard) only has a historical archive starting on **January 1, 2022**.
+*   *Feasibility:* Training a spatio-temporal AI model on 8 years (2015-2023) of high-resolution 2.5km data across CONUS would require massive supercomputing clusters and months of runtime. Limiting the window to **2 years (2022-2023)** is far more realistic for development and compute budgets, while still providing enough seasonal cycles to capture extreme disaster events.
+*   *Split Strategy:* We recommend using **2022 for Training** and **2023 for Validation/Testing**.
 
 ---
 
