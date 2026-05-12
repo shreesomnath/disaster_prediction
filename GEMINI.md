@@ -7,11 +7,12 @@ We are developing a state-of-the-art AI model capable of generating hazard predi
 *   **Resolution Synchronization:** A strict requirement is to use a unified common spatial resolution (e.g., 2.5km or 4km) for all inputs and targets. All data preprocessing pipelines must align spatial grids and temporal overlaps precisely.
 *   **Input Data:** The primary dynamic input relies on advanced global weather models like DeepMind's WeatherNext-2 / GraphCast / GenCast.
 *   **Static Features:** We incorporate static geographical and topographical data (e.g., LULC, DEM/elevation, SZA, soil moisture).
-*   **Target Ground Truth:**
-    *   **Hail:** MRMS MESH data.
-    *   **Heatstress:** NWS HeatRisk.
-    *   **Floods:** USGS stream gages / NOAA NWM.
-    *   **Landslides:** USGS National Landslide Inventory.
+## Target Ground Truth (Selected but Extensible):
+*   **Hail:** MRMS MESH data (Primary). *Alternatives: SPC Storm Reports, Satellite Proxy.*
+*   **Heatstress:** NWS HeatRisk (Primary). *Alternatives: Apparent Temp, Land Surface Temperature (LST).*
+*   **Floods:** USGS stream gages / NOAA NWM (Primary). *Alternatives: Satellite SAR Inundation.*
+*   **Landslides:** USGS National Landslide Inventory (Primary). *Alternatives: NASA Global Landslide Catalog.*
+*   *Note: While primary targets are selected for pipeline development, the architecture remains flexible to incorporate these alternatives based on ongoing validation.*
 *   **Model Architectures:** Focus is not limited to Graph Neural Networks (GNNs). We are actively exploring and evaluating diffusion models, transformers, and hybrid architectures (e.g., PINNs, NeuralGCM) that might better model the spatio-temporal dynamics and rare extreme events.
 
 ## Workflow Execution Rules
